@@ -35,7 +35,7 @@ public class TierJpaAdapter implements TierDataSourcePort {
                 .orElse(new TierJpaEntity());
 
         entity.setName(tier.getName());
-        entity.setIndex_placement(tier.getIndexPlacement());
+        entity.setIndexPlacement(tier.getIndexPlacement());
 
         // Map companies from domain to entities
         List<CompanyJpaEntity> companyEntities = tier.getListCompany().stream()
@@ -56,7 +56,7 @@ public class TierJpaAdapter implements TierDataSourcePort {
     }
 
     private Tier toDomain(TierJpaEntity entity) {
-        Tier tier = new Tier(entity.getName(), entity.getIndex_placement());
+        Tier tier = new Tier(entity.getId(), entity.getName(), entity.getIndexPlacement());
         entity.getCompanies().forEach(c -> tier.getListCompany().add(new Company(c.getName(), c.getLogoUrl())));
         return tier;
     }

@@ -23,8 +23,8 @@ public class TierJpaEntity {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private int index_placement;
+    @Column(name = "index_placement", nullable = false)
+    private int indexPlacement;
 
     @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
