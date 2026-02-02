@@ -17,6 +17,10 @@ public class Tier {
             throw new IllegalArgumentException("Tier name cannot be empty");
         }
 
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Tier id cannot be empty");
+        }
+
         if (index_placement <= 0) {
             throw new IllegalArgumentException("Tier placement must be superior to 0");
         }
