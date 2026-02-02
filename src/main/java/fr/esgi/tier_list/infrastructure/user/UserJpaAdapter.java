@@ -18,22 +18,23 @@ public class UserJpaAdapter implements UserDataSourcePort {
             user.getId(), 
             user.getName(), 
             user.getEmail(), 
-            user.getUsername()
+            user.getUsername(),
+            user.getPassword()
         );
         UserJpaEntity saved = repository.save(entity);
-        return new User(saved.getId(), saved.getName(), saved.getEmail(), saved.getUsername());
+        return new User(saved.getId(), saved.getName(), saved.getEmail(), saved.getUsername(), saved.getPassword());
     }
 
     @Override
     public Optional<User> findById(String id) {
         return repository.findById(id)
-                .map(e -> new User(e.getId(), e.getName(), e.getEmail(), e.getUsername()));
+                .map(e -> new User(e.getId(), e.getName(), e.getEmail(), e.getUsername(), e.getPassword()));
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
         return repository.findByEmail(email)
-                .map(e -> new User(e.getId(), e.getName(), e.getEmail(), e.getUsername()));
+                .map(e -> new User(e.getId(), e.getName(), e.getEmail(), e.getUsername(), e.getPassword()));
     }
 
     @Override

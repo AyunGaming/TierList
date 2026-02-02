@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserRestController {
 
@@ -18,10 +18,10 @@ public class UserRestController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@RequestBody UserRegistrationRequest request) {
         User user = userService.register(
-            request.name(), 
-            request.email(), 
-            request.username()
-        );
+                request.name(),
+                request.email(),
+                request.username(),
+                request.password());
         return new ResponseEntity<>(UserResponse.fromDomain(user), HttpStatus.CREATED);
     }
 
@@ -31,9 +31,20 @@ public class UserRestController {
         return ResponseEntity.ok(UserResponse.fromDomain(user));
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) {
+        User user = userService.login(request.email(), request.password());
+
+        return ResponseEntity.ok(UserResponse.fromDomain(user));
+    }
+
+    public record LoginRequest(String email, String password) {
+    }
+
     public record UserRegistrationRequest(
-        String name, 
-        String email, 
-        String username
-    ) {}
+            String name,
+            String email,
+            String username,
+            String password) {
+    }
 }
