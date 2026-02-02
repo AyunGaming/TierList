@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const TIERS = [
   { id: 'S', label: "S: Les chefs-d'oeuvre du branding", color: 'bg-[#ff7f7f]' },
@@ -9,9 +10,50 @@ const TIERS = [
   { id: 'D', label: 'D: Les flops visuels', color: 'bg-[#7fbfff]' },
 ];
 
+interface Company {
+  id: string;
+  name: string;
+  logoUrl: string;
+}
+
+const getLogoImageUrl = (logoUrl: string): string => {
+  try {    
+    // Construire l'URL de l'image via l'API logo.dev
+    return `${logoUrl}?token=pk_GRX1YgVoTMCmJ2KyAQW9nA`;
+  } catch (error) {
+    console.error('Erreur lors de la construction de l\'URL du logo:', error);
+    return logoUrl; // Retourner l'URL originale en cas d'erreur
+  }
+};
+
+const CompanyLogo = ({ company }: { company: Company }) => {
+  const [imageError, setImageError] = useState(false);
+  const imageUrl = company.logoUrl ? getLogoImageUrl(company.logoUrl) : null;
+
+  return (
+    <div
+      className="w-16 h-16 bg-[#333] border border-gray-600 rounded flex items-center justify-center cursor-pointer hover:border-[#e2b355] transition-all overflow-hidden"
+      title={company.name}
+    >
+      {imageUrl && !imageError ? (
+        <img
+          src={imageUrl}
+          alt={company.name}
+          className="w-full h-full object-contain"
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <span className="text-xs text-gray-500">{company.name}</span>
+      )}
+    </div>
+  );
+};
+
 const TierList = () => {
   const navigate = useNavigate();
-  const [username] = useState("Test"); 
+  const [username] = useState("Test");
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isLoading, setIsLoading] = useState(true); 
 
   const handleLogout = () => {
     navigate('/');
@@ -20,6 +62,21 @@ const TierList = () => {
   const handleExportPDF = () => {
     console.log("Exportation en cours vers S3...");
   };
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await axios.get<Company[]>('http://localhost:8180/companies');
+        setCompanies(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des companies:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#121212] text-white flex flex-col items-center p-6">
@@ -62,11 +119,15 @@ const TierList = () => {
         </div>
         <div className="bg-[#1a1a1a] border-2 border-black p-6 rounded-b-md min-h-[200px]">
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4 justify-items-center">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="w-16 h-16 bg-[#333] border border-gray-600 rounded flex items-center justify-center cursor-pointer hover:border-[#e2b355] transition-all">
-                <span className="text-xs text-gray-500">Logo</span>
-              </div>
-            ))}
+            {isLoading ? (
+              <div className="col-span-full text-gray-500 text-sm">Chargement...</div>
+            ) : companies.length === 0 ? (
+              <div className="col-span-full text-gray-500 text-sm">Aucune company disponible</div>
+            ) : (
+              companies.map((company) => (
+                <CompanyLogo key={company.id} company={company} />
+              ))
+            )}
           </div>
         </div>
       </div>
