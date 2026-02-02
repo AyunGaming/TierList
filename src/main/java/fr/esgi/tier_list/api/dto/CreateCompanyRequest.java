@@ -12,6 +12,6 @@ public record CreateCompanyRequest(
         @Schema(description = "Company name", example = "Spotify")
         String name,
 
-        @Schema(description = "URL of the company logo", example = "https://logo.dev/spotify.com")
+        @Schema(description = "URL of the company logo", example = "https://img.logo.dev/spotify.com")
         String logoUrl)
         implements Serializable {}

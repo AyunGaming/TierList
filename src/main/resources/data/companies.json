@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Spotify",
+    "logoUrl": "https://img.logo.dev/spotify.com"
+  },
+  {
+    "name": "Netflix",
+    "logoUrl": "https://img.logo.dev/netflix.com"
+  },
+  {
+    "name": "Google",
+    "logoUrl": "https://img.logo.dev/google.com"
+  },
+  {
+    "name": "Apple",
+    "logoUrl": "https://img.logo.dev/apple.com"
+  },
+  {
+    "name": "Meta",
+    "logoUrl": "https://img.logo.dev/meta.com"
+  },
+  {
+    "name": "Tesla",
+    "logoUrl": "https://img.logo.dev/tesla.com"
+  },
+  {
+    "name": "Samsung",
+    "logoUrl": "https://img.logo.dev/samsung.com"
+  }
+]
