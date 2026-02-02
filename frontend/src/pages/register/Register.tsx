@@ -97,6 +97,10 @@ const Register = () => {
               type="password"
               placeholder="Mot de passe"
               className="w-full p-2.5 border border-gray-300 rounded bg-[#fdfdfd] text-black focus:ring-2 focus:ring-[#e2b355] outline-none transition-all"
+              value={formData.password} 
+              onChange={
+                (e) => setFormData({ ...formData, password: e.target.value }) 
+              }
               required
             />
           </div>
