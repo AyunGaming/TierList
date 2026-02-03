@@ -29,11 +29,15 @@ public class TierJpaEntity {
     private int indexPlacement;
 
     @Builder.Default
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(name = "tier_companies", joinColumns = @JoinColumn(name = "tier_id"), inverseJoinColumns = @JoinColumn(name = "company_id"))
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tier_companies",
+            joinColumns = @JoinColumn(name = "tier_id"),
+            inverseJoinColumns = @JoinColumn(name = "company_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"tier_id", "company_id"}))
     private List<CompanyJpaEntity> companies = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tier_list_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tier_list_id", nullable = false, referencedColumnName = "id")
     private TierListJpaEntity tierList;
 }

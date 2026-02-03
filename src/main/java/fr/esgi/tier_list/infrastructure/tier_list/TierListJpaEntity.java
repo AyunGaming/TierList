@@ -25,5 +25,6 @@ public class TierListJpaEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "tierList", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("indexPlacement ASC")
     private List<TierJpaEntity> tiers = new ArrayList<>();
 }
