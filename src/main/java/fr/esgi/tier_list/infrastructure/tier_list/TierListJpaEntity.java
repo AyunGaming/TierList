@@ -19,9 +19,6 @@ public class TierListJpaEntity {
     @Id
     private String id;
 
-    @Column(name = "pdf_name", nullable = false)
-    private String pdfName;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private UserJpaEntity user;

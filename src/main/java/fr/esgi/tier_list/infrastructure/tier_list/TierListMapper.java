@@ -30,7 +30,6 @@ public class TierListMapper {
 
         return new TierList(
                 entity.getId(),
-                entity.getPdfName(),
                 tiers,
                 entity.getUser().getId());
     }
@@ -44,7 +43,6 @@ public class TierListMapper {
 
         TierListJpaEntity entity = TierListJpaEntity.builder()
                 .id(domain.getId())
-                .pdfName(domain.getPdf_name())
                 .user(user)
                 .tiers(new ArrayList<>())
                 .build();

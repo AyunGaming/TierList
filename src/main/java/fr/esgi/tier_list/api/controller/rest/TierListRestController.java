@@ -26,7 +26,7 @@ public class TierListRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TierListResponse create(@RequestBody CreateTierListRequest request) {
-        TierList tierList = tierListService.create(request.getPdfName(), request.getUserId());
+        TierList tierList = tierListService.create(request.getUserId());
         return toResponse(tierList);
     }
 
@@ -58,7 +58,6 @@ public class TierListRestController {
 
         return new TierListResponse(
                 tierList.getId(),
-                tierList.getPdf_name(),
                 tierResponses,
                 tierList.getUser_id());
     }

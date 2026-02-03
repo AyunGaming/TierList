@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 public class TierListResponse {
     private String id;
-    private String pdfName;
     private List<TierResponse> tiers;
     private String userId;
 }
