@@ -4,6 +4,7 @@ import fr.esgi.tier_list.domain.Company;
 import fr.esgi.tier_list.domain.Tier;
 import fr.esgi.tier_list.domain.TierList;
 import fr.esgi.tier_list.infrastructure.company.CompanyJpaEntity;
+import fr.esgi.tier_list.infrastructure.company.CompanyJpaRepository;
 import fr.esgi.tier_list.infrastructure.tier.TierJpaEntity;
 import fr.esgi.tier_list.infrastructure.user.UserJpaEntity;
 import fr.esgi.tier_list.infrastructure.user.UserJpaRepository;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class TierListMapper {
 
     private final UserJpaRepository userJpaRepository;
+    private final CompanyJpaRepository companyJpaRepository;
 
     public TierList toDomain(TierListJpaEntity entity) {
         if (entity == null)
@@ -67,7 +69,8 @@ public class TierListMapper {
 
     private TierJpaEntity tierToEntity(Tier domain, TierListJpaEntity tierListEntity) {
         List<CompanyJpaEntity> companies = domain.getListCompany().stream()
-                .map(c -> new CompanyJpaEntity(c.getName(), c.getLogoUrl()))
+                .map(c -> companyJpaRepository.findByName(c.getName()).orElse(null))
+                .filter(c -> c != null)
                 .collect(Collectors.toList());
 
         return TierJpaEntity.builder()

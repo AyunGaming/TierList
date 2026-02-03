@@ -16,6 +16,11 @@ public class TierListService {
     private final TierListDataSourcePort tierListDataSourcePort;
 
     public TierList create(String userId) {
+        List<TierList> existing = tierListDataSourcePort.findAllByUserId(userId);
+        if (!existing.isEmpty()) {
+            return existing.get(0);
+        }
+
         List<fr.esgi.tier_list.domain.Tier> defaultTiers = new ArrayList<>();
         defaultTiers.add(new fr.esgi.tier_list.domain.Tier(UUID.randomUUID().toString(), "S", 1));
         defaultTiers.add(new fr.esgi.tier_list.domain.Tier(UUID.randomUUID().toString(), "A", 2));

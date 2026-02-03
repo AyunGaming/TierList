@@ -9,6 +9,7 @@ import fr.esgi.tier_list.domain.port.TierDataSourcePort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TierService {
@@ -30,19 +31,53 @@ public class TierService {
     }
 
     public void assignCompanyToTier(String tierListId, String companyName, String tierName) {
-        fr.esgi.tier_list.domain.TierList tierList = tierListDataSourcePort.findById(tierListId)
-                .orElseThrow(() -> new RuntimeException("TierList not found"));
+        Optional<fr.esgi.tier_list.domain.TierList> optionalTierList = tierListDataSourcePort.findById(tierListId);
+        if (optionalTierList.isEmpty()) {
+            return;
+        }
 
-        Tier tier = tierList.getList_tier().stream()
+        fr.esgi.tier_list.domain.TierList tierList = optionalTierList.get();
+
+        Optional<Company> optionalCompany = companyDataSourcePort.findByName(companyName)
+                .map(this::toDomain);
+        if (optionalCompany.isEmpty()) {
+            return;
+        }
+
+        Company company = optionalCompany.get();
+
+        // Retirer la company de tous les tiers de cette tierlist
+        for (Tier t : tierList.getList_tier()) {
+            t.getListCompany().removeIf(c -> c.getName().equalsIgnoreCase(company.getName()));
+        }
+
+        // Trouver le tier cible
+        Optional<Tier> optionalTier = tierList.getList_tier().stream()
                 .filter(t -> t.getName().equalsIgnoreCase(tierName))
-                .findFirst()
-                .orElseThrow(() -> new TierNotFoundException("Tier " + tierName + " not found in this list"));
+                .findFirst();
+        if (optionalTier.isEmpty()) {
+            return;
+        }
 
-        Company company = companyDataSourcePort.findByName(companyName)
-                .map(this::toDomain)
-                .orElseThrow(() -> new RuntimeException("Company " + companyName + " not found"));
+        Tier targetTier = optionalTier.get();
+        targetTier.getListCompany().add(company);
 
-        tier.getListCompany().add(company);
+        tierListDataSourcePort.save(tierList);
+    }
+
+    public void removeCompanyFromTierList(String tierListId, String companyName) {
+        Optional<fr.esgi.tier_list.domain.TierList> optionalTierList = tierListDataSourcePort.findById(tierListId);
+        if (optionalTierList.isEmpty()) {
+            return;
+        }
+
+        fr.esgi.tier_list.domain.TierList tierList = optionalTierList.get();
+
+        // Retirer la company de tous les tiers de cette tierlist
+        for (Tier t : tierList.getList_tier()) {
+            t.getListCompany().removeIf(c -> c.getName().equalsIgnoreCase(companyName));
+        }
+
         tierListDataSourcePort.save(tierList);
     }
 

@@ -12,5 +12,7 @@ public interface TierListDataSourcePort {
 
     List<TierList> findAllByUserId(String userId);
 
+    List<TierList> findAll();
+
     void deleteById(String id);
 }

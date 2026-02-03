@@ -2,6 +2,7 @@ package fr.esgi.tier_list.api.controller.rest;
 
 import fr.esgi.tier_list.api.dto.AssignCompanyToTierRequest;
 import fr.esgi.tier_list.api.dto.CompanyResponse;
+import fr.esgi.tier_list.api.dto.RemoveCompanyFromTierListRequest;
 import fr.esgi.tier_list.api.dto.TierResponse;
 import fr.esgi.tier_list.application.tier.TierService;
 import fr.esgi.tier_list.domain.Tier;
@@ -50,6 +51,16 @@ public class TierRestController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @Operation(summary = "Remove a company from all tiers", description = "Removes a company from all tiers in the tier list")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Company removed successfully")
+    })
+    @PostMapping("/remove")
+    public ResponseEntity<Void> remove(@RequestBody RemoveCompanyFromTierListRequest request) {
+        tierService.removeCompanyFromTierList(request.tierListId(), request.companyName());
+        return ResponseEntity.ok().build();
     }
 
     private TierResponse toResponse(Tier tier) {
