@@ -43,7 +43,7 @@ public class TierRestController {
     @PostMapping("/assign")
     public ResponseEntity<Void> assign(@RequestBody AssignCompanyToTierRequest request) {
         try {
-            tierService.assignCompanyToTier(request.companyName(), request.tierName());
+            tierService.assignCompanyToTier(request.tierListId(), request.companyName(), request.tierName());
             return ResponseEntity.ok().build();
         } catch (TierNotFoundException e) {
             return ResponseEntity.notFound().build();

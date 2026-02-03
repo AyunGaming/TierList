@@ -16,10 +16,17 @@ public class TierListService {
     private final TierListDataSourcePort tierListDataSourcePort;
 
     public TierList create(String pdfName, String userId) {
+        List<fr.esgi.tier_list.domain.Tier> defaultTiers = new ArrayList<>();
+        defaultTiers.add(new fr.esgi.tier_list.domain.Tier(UUID.randomUUID().toString(), "S", 1));
+        defaultTiers.add(new fr.esgi.tier_list.domain.Tier(UUID.randomUUID().toString(), "A", 2));
+        defaultTiers.add(new fr.esgi.tier_list.domain.Tier(UUID.randomUUID().toString(), "B", 3));
+        defaultTiers.add(new fr.esgi.tier_list.domain.Tier(UUID.randomUUID().toString(), "C", 4));
+        defaultTiers.add(new fr.esgi.tier_list.domain.Tier(UUID.randomUUID().toString(), "D", 5));
+
         TierList tierList = new TierList(
                 UUID.randomUUID().toString(),
                 pdfName,
-                new ArrayList<>(),
+                defaultTiers,
                 userId);
         tierListDataSourcePort.save(tierList);
         return tierList;

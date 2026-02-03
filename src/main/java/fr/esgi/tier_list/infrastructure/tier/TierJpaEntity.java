@@ -14,13 +14,15 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
-@Table(name = "tier")
+@Table(name = "tier", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "tier_list_id" })
+})
 public class TierJpaEntity {
 
     @Id
     private String id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String name;
 
     @Column(name = "index_placement", nullable = false)

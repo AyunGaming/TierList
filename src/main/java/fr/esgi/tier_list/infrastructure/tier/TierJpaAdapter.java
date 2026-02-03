@@ -32,7 +32,11 @@ public class TierJpaAdapter implements TierDataSourcePort {
     @Transactional
     public void save(Tier tier) {
         TierJpaEntity entity = tierJpaRepository.findByName(tier.getName())
-                .orElse(new TierJpaEntity());
+                .orElseGet(() -> {
+                    TierJpaEntity newEntity = new TierJpaEntity();
+                    newEntity.setId(java.util.UUID.randomUUID().toString());
+                    return newEntity;
+                });
 
         entity.setName(tier.getName());
         entity.setIndexPlacement(tier.getIndexPlacement());
