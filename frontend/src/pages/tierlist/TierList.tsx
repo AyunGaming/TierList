@@ -271,7 +271,7 @@ const TierList = () => {
           onClick={handleExportPDF}
           className="absolute -top-8 right-0 bg-[#4a90e2] hover:bg-blue-600 px-3 py-1 rounded text-xs font-bold transition-all"
         >
-          Exporter PDF
+          Synthèse des tier lists
         </button>
         {TIERS.map((tier) => (
           <div
