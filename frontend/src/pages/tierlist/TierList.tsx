@@ -1,14 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const TIERS = [
-  { id: 'S', label: "S: Les chefs-d'oeuvre du branding", color: 'bg-[#ff7f7f]' },
-  { id: 'A', label: 'A: Très bons logos', color: 'bg-[#ffbf7f]' },
-  { id: 'B', label: 'B: Ça passe', color: 'bg-[#ffff7f]' },
-  { id: 'C', label: 'C: Médiocres', color: 'bg-[#7fff7f]' },
-  { id: 'D', label: 'D: Les flops visuels', color: 'bg-[#7fbfff]' },
-];
+import { draggable, dropTargetForElements, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
 interface Company {
   id: string;
@@ -16,120 +9,129 @@ interface Company {
   logoUrl: string;
 }
 
-const getLogoImageUrl = (logoUrl: string): string => {
-  try {    
-    // Construire l'URL de l'image via l'API logo.dev
-    return `${logoUrl}?token=pk_GRX1YgVoTMCmJ2KyAQW9nA`;
-  } catch (error) {
-    console.error('Erreur lors de la construction de l\'URL du logo:', error);
-    return logoUrl; // Retourner l'URL originale en cas d'erreur
-  }
-};
+const TIERS = [
+  { id: 'S', color: 'bg-[#ff7f7f]' },
+  { id: 'A', color: 'bg-[#ffbf7f]' },
+  { id: 'B', color: 'bg-[#ffff7f]' },
+  { id: 'C', color: 'bg-[#7fff7f]' },
+  { id: 'D', color: 'bg-[#7fbfff]' },
+];
 
-const CompanyLogo = ({ company }: { company: Company }) => {
-  const [imageError, setImageError] = useState(false);
-  const imageUrl = company.logoUrl ? getLogoImageUrl(company.logoUrl) : null;
+const CompanyLogo = ({ company }: { company: Company }) => (
+  <div className="w-16 h-16 bg-[#333] border border-gray-600 rounded flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden shadow-md" title={company.name}>
+    <img src={`${company.logoUrl}?token=pk_GRX1YgVoTMCmJ2KyAQW9nA`} alt={company.name} className="w-full h-full object-contain pointer-events-none" onError={(e) => (e.currentTarget.style.display = 'none')} />
+  </div>
+);
+
+const DraggableLogo = ({ company }: { company: Company }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    return draggable({
+      element: el,
+      getInitialData: () => ({ id: company.id, type: 'logo' }),
+      onDragStart: () => setIsDragging(true),
+      onDrop: () => setIsDragging(false),
+    });
+  }, [company]);
 
   return (
-    <div
-      className="w-16 h-16 bg-[#333] border border-gray-600 rounded flex items-center justify-center cursor-pointer hover:border-[#e2b355] transition-all overflow-hidden"
-      title={company.name}
-    >
-      {imageUrl && !imageError ? (
-        <img
-          src={imageUrl}
-          alt={company.name}
-          className="w-full h-full object-contain"
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <span className="text-xs text-gray-500">{company.name}</span>
-      )}
+    <div ref={ref} className={isDragging ? 'opacity-30' : 'opacity-100'}>
+      <CompanyLogo company={company} />
+    </div>
+  );
+};
+
+const DropZone = ({ id, children, className }: { id: string; children: React.ReactNode; className: string }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isOver, setIsOver] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    return dropTargetForElements({
+      element: el,
+      getData: () => ({ id }),
+      onDragEnter: () => setIsOver(true),
+      onDragLeave: () => setIsOver(false),
+      onDrop: () => setIsOver(false),
+    });
+  }, [id]);
+
+  return (
+    <div ref={ref} className={`${className} ${isOver ? 'bg-white/10' : ''}`}>
+      {children}
     </div>
   );
 };
 
 const TierList = () => {
   const navigate = useNavigate();
-  const [username] = useState("Test");
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [isLoading, setIsLoading] = useState(true); 
-
-  const handleLogout = () => {
-    navigate('/');
-  };
-
-  const handleExportPDF = () => {
-    console.log("Exportation en cours vers S3...");
-  };
+  const [data, setData] = useState<{ [key: string]: Company[] }>({
+    available: [], S: [], A: [], B: [], C: [], D: []
+  });
 
   useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const response = await axios.get<Company[]>('http://localhost:8180/companies');
-        setCompanies(response.data);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des companies:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    axios.get<Company[]>('http://localhost:8180/companies')
+      .then(res => setData(prev => ({ ...prev, available: res.data })))
+      .catch(err => console.error(err));
+  }, []);
 
-    fetchCompanies();
+  useEffect(() => {
+    return monitorForElements({
+      onDrop({ source, location }) {
+        const destination = location.current.dropTargets[0];
+        if (!destination) return;
+
+        const itemId = source.data.id as string;
+        const targetContainerId = destination.data.id as string;
+
+        setData(prev => {
+          const sourceContainerId = Object.keys(prev).find(key => prev[key].some(c => c.id === itemId));
+          if (!sourceContainerId || sourceContainerId === targetContainerId) return prev;
+
+          const logo = prev[sourceContainerId].find(c => c.id === itemId)!;
+          
+          return {
+            ...prev,
+            [sourceContainerId]: prev[sourceContainerId].filter(c => c.id !== itemId),
+            [targetContainerId]: [...prev[targetContainerId], logo],
+          };
+        });
+      },
+    });
   }, []);
 
   return (
     <div className="min-h-screen bg-[#121212] text-white flex flex-col items-center p-6">
-      
-      <header className="w-full max-w-5xl flex justify-between items-center mb-12">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-semibold italic">Bienvenue {username} !</h1>
-        </div>
-        <button 
-          onClick={handleLogout}
-          className="bg-[#e25555] hover:bg-red-700 px-4 py-1 rounded text-sm font-bold transition-colors"
-        >
-          Déconnexion
-        </button>
+      <header className="w-full max-w-5xl flex justify-between mb-8">
+        <h1 className="text-2xl font-bold italic">Tier List Maker</h1>
+        <button onClick={() => navigate('/')} className="bg-red-500 px-4 py-1 rounded text-sm">Déconnexion</button>
       </header>
 
-      <div className="w-full max-w-5xl bg-[#1a1a1a] border-2 border-black rounded-sm shadow-2xl mb-12 relative">
-        <button 
-          onClick={handleExportPDF}
-          className="absolute -top-8 right-0 bg-[#4a90e2] hover:bg-blue-600 px-3 py-1 rounded text-xs font-bold transition-all"
-        >
-          Exporter PDF
-        </button>
-
-        {TIERS.map((tier) => (
+      <div className="w-full max-w-5xl bg-[#1a1a1a] border-2 border-black mb-12 shadow-2xl">
+        {TIERS.map(tier => (
           <div key={tier.id} className="flex border-b-2 last:border-b-0 border-black min-h-[100px]">
             <div className={`${tier.color} w-24 sm:w-32 flex items-center justify-center text-black font-extrabold text-3xl border-r-2 border-black`}>
               {tier.id}
             </div>
-            <div className="flex-1 p-2 flex flex-wrap gap-2 content-start">
-              {/* Les logos viendront ici via le drag & drop */}
-            </div>
+            <DropZone id={tier.id} className="flex-1 p-2 flex flex-wrap gap-2 content-start">
+              {data[tier.id].map(c => <DraggableLogo key={c.id} company={c} />)}
+            </DropZone>
           </div>
         ))}
       </div>
 
       <div className="w-full max-w-5xl">
-        <div className="bg-[#252525] p-2 inline-block rounded-t-md text-sm font-bold border-x border-t border-black">
-          Liste des logos disponibles
-        </div>
-        <div className="bg-[#1a1a1a] border-2 border-black p-6 rounded-b-md min-h-[200px]">
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4 justify-items-center">
-            {isLoading ? (
-              <div className="col-span-full text-gray-500 text-sm">Chargement...</div>
-            ) : companies.length === 0 ? (
-              <div className="col-span-full text-gray-500 text-sm">Aucune company disponible</div>
-            ) : (
-              companies.map((company) => (
-                <CompanyLogo key={company.id} company={company} />
-              ))
-            )}
-          </div>
-        </div>
+        <div className="bg-[#252525] p-2 inline-block rounded-t-md text-sm font-bold border-x border-t border-black">Logos disponibles</div>
+        <DropZone id="available" className="bg-[#1a1a1a] border-2 border-black p-6 rounded-b-md min-h-[150px] flex flex-wrap gap-4">
+          {data.available.map(c => <DraggableLogo key={c.id} company={c} />)}
+        </DropZone>
       </div>
     </div>
   );
