@@ -6,7 +6,7 @@ import lombok.*;
 @Entity
 @NoArgsConstructor
 @RequiredArgsConstructor
-@Table(name="Company")
+@Table(name = "Company")
 public class CompanyJpaEntity {
 
     @Id
@@ -18,6 +18,7 @@ public class CompanyJpaEntity {
     @NonNull
     @Getter
     @Setter
+    @Column(unique = true, nullable = false)
     private String name;
 
     @NonNull
