@@ -93,6 +93,7 @@ const DropZone = ({
 const TierList = () => {
   const navigate = useNavigate();
   const [username] = useState("Test");
+  const [tierListId, setTierListId] = useState<string | null>(null);
   const [data, setData] = useState<{ [key: string]: Company[] }>({
     available: [],
     S: [],
@@ -103,11 +104,71 @@ const TierList = () => {
   });
 
   useEffect(() => {
-    axios
-      .get<Company[]>("http://localhost:8180/companies")
-      .then((res) => setData((prev) => ({ ...prev, available: res.data })))
-      .catch((err) => console.error(err));
-  }, []);
+    const userInfoRaw = localStorage.getItem("user_info");
+    if (!userInfoRaw) {
+      navigate("/login");
+      return;
+    }
+
+    const initializeTierList = async () => {
+      try {
+        const user = JSON.parse(userInfoRaw) as { id: string };
+        const [companiesRes, tierListRes] = await Promise.all([
+          axios.get<Company[]>("http://localhost:8180/companies"),
+          axios.post("http://localhost:8180/tier-lists", {
+            userId: user.id,
+          }),
+        ]);
+
+        const companies = companiesRes.data;
+        const tierList = tierListRes.data as {
+          id: string;
+          tiers: {
+            name: string;
+            listCompany: { name: string; logoUrl: string }[];
+          }[];
+        };
+
+        const newData: { [key: string]: Company[] } = {
+          available: [],
+          S: [],
+          A: [],
+          B: [],
+          C: [],
+          D: [],
+        };
+
+        const assignedNames = new Set<string>();
+
+        tierList.tiers.forEach((tier) => {
+          const tierKey = tier.name.toUpperCase();
+          if (!["S", "A", "B", "C", "D"].includes(tierKey)) return;
+
+          newData[tierKey] = tier.listCompany.map((c) => {
+            assignedNames.add(c.name);
+            const existing = companies.find((comp) => comp.name === c.name);
+
+            return {
+              id: existing?.id ?? `tier-${tierKey}-${c.name}`,
+              name: c.name,
+              logoUrl: c.logoUrl,
+            };
+          });
+        });
+
+        newData.available = companies
+          .filter((c) => !assignedNames.has(c.name))
+          .map((c) => ({ id: c.id, name: c.name, logoUrl: c.logoUrl }));
+
+        setTierListId(tierList.id);
+        setData(newData);
+      } catch (e) {
+        console.error("Erreur lors de l'initialisation de la tierlist", e);
+      }
+    };
+
+    initializeTierList();
+  }, [navigate]);
 
   useEffect(() => {
     return monitorForElements({
@@ -127,6 +188,37 @@ const TierList = () => {
 
           const logo = prev[sourceContainerId].find((c) => c.id === itemId)!;
 
+          if (tierListId && logo && logo.name) {
+            if (targetContainerId === "available" && sourceContainerId !== "available") {
+              // Retirer la company de tous les tiers
+              axios
+                .post("http://localhost:8180/tiers/remove", {
+                  tierListId: tierListId,
+                  companyName: logo.name,
+                })
+                .catch((err) => {
+                  console.error(
+                    "Erreur lors de la suppression de la company des tiers",
+                    err,
+                  );
+                });
+            } else if (targetContainerId !== "available") {
+              // Assigner la company au tier cible
+              axios
+                .post("http://localhost:8180/tiers/assign", {
+                  tierListId: tierListId,
+                  companyName: logo.name,
+                  tierName: targetContainerId,
+                })
+                .catch((err) => {
+                  console.error(
+                    "Erreur lors de l'assignation de la company au tier",
+                    err,
+                  );
+                });
+            }
+          }
+
           return {
             ...prev,
             [sourceContainerId]: prev[sourceContainerId].filter(
@@ -137,10 +229,29 @@ const TierList = () => {
         });
       },
     });
-  }, []);
+  }, [tierListId]);
 
-  const handleExportPDF = () => {
-    console.log("Exportation en cours vers S3...");
+  const handleExportPDF = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8180/exportSyntheseTierListsPdf",
+        {
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "synthese-tier-lists.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erreur lors de l'export PDF", err);
+      alert("Erreur lors de l'export du PDF");
+    }
   };
 
   return (
