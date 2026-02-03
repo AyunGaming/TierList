@@ -26,5 +26,17 @@
   {
     "name": "Samsung",
     "logoUrl": "https://img.logo.dev/samsung.com"
+  },
+  {
+    "name": "Shopify",
+    "logoUrl": "https://img.logo.dev/shopify.com"
+  },
+  {
+    "name": "X",
+    "logoUrl": "https://img.logo.dev/x.com"
+  },
+  {
+    "name": "Reddit",
+    "logoUrl": "https://img.logo.dev/reddit.com"
   }
 ]
