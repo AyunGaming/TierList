@@ -22,4 +22,13 @@ public class StockageService {
                 "application/pdf"
         );
     }
+
+    public void uploadImage(String filename, InputStream data) {
+        objectStoragePort.upload(
+                minioProperties.getBucket(),
+                filename,
+                data,
+                "image/png"
+        );
+    }
 }
